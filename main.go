@@ -45,8 +45,24 @@ func main() {
 		port = "4444"
 	}
 
-	slog.Info("Listening on", "port", port)
+	key, existsKey := os.LookupEnv("KEY")
+	cert, existsCert := os.LookupEnv("CERT")
 
-	http.ListenAndServe(":"+port, router)
+	if existsKey && existsCert {
+		slog.Info("Listening HTTPS on", "port", port)
+		error := http.ListenAndServeTLS(":"+port, cert, key, router)
+
+		if error != nil {
+			slog.Error("Error starting server", "error", error)
+		}
+
+	} else {
+		slog.Info("Listening HTTP on", "port", port)
+		error := http.ListenAndServe(":"+port, router)
+
+		if error != nil {
+			slog.Error("Error starting server", "error", error)
+		}
+	}
 
 }
